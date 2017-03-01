@@ -1,0 +1,2 @@
+# jintegrator
+Joomla! Component Integrator
