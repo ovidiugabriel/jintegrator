@@ -79,6 +79,28 @@ jml_import('joomla.language.text');
 jml_import('joomla.language.language');
 jml_import('joomla.factory');
 
+
+class Settings {
+    public $component_name;
+    public $controller_name;
+    public $controller_value;
+
+    public function __construct($filename) {
+        if (! file_exists($filename)) {
+            throw new Exception("$filename - no such input file");
+        }
+
+        $config = parse_ini_file($filename);
+        foreach ($config as $key => $value) {
+            $this->$key = $value;
+        }
+    }
+
+    public function toArray() {
+        return (array) $this;
+    }
+}
+
 /**
  *
  * @param  string $name
@@ -89,7 +111,7 @@ function jml_import($name) {
     require_once $file;
 }
 
-/** 
+/**
  * @return JDatabaseDriver
  */
 function database() {
@@ -143,7 +165,7 @@ function get_extension($component_name) {
     return $db->loadAssoc();
 }
 
-/** 
+/**
  * @param string $table
  * @param array $data
  * @return void
@@ -198,20 +220,33 @@ function db_update($table, array $data, $field, $value) {
     $db->execute();
 }
 
+/**
+ *
+ * @param  Settings $settings
+ * @return string
+ */
+function build_link(Settings $settings) {
+    return 'index.php?' . http_build_query(array(
+            'option'                    => $settings->component_name,
+            $settings->controller_name  => $settings->controller_value,
+        ));
+}
+
 //
 // Main code
 //
 
-$settings = parse_ini_file('config.ini');
-$link = 'index.php?option='.$settings['component_name'].'&'.$settings['controller_name'].'='.$settings['controller_value'];
 
-$properties = get_extension($settings['component_name']);
+$settings = new Settings('config.ini');
+$link = build_link($settings);
+
+$properties = get_extension($settings->component_name);
 
 $data = array(
     'menutype'     => 'menu',
-    'title'        => $settings['component_title'],
-    'alias'        => $settings['component_title'],
-    'path'         => $settings['component_name'],
+    'title'        => $settings->component_title,
+    'alias'        => $settings->component_title,
+    'path'         => $settings->component_name,
     'link'         => $link,
     'type'         => 'component',
     'published'    => 1,
